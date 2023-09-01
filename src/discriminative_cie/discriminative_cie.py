@@ -56,9 +56,10 @@ class DiscriminativeCIE:
                  alternative_relation_extractor_use_types: bool = True,
                  alternative_relation_extractor_deactivate_text: bool = False,):
 
-
+        self.index_name = "indices/" + hashlib.md5(Path(path_to_bi_encoder).name.encode('utf-8')).hexdigest()[0:10]
+        print(self.index_name)
         relation_counts = json.load(open("data/relation_counts.json"))
-        rel_id2surface_form = {item["information"]["en_title"]: item["wikidata_id"] for item in jsonlines.open("data/surface_form_dicts/rel_id2surface_form.jsonl")}
+        rel_id2surface_form = {item["information"]["en_title"]: item["wikidata_id"] for item in jsonlines.open("data/rel_id2surface_form.jsonl")}
         rel_id2surface_form_inverse = {v: k for k, v in rel_id2surface_form.items()}
         self.relation_counts = {rel_id2surface_form[k]: v for k, v in relation_counts.items()}
         self.rel_names_descending = [i[0] for i in sorted(list(self.relation_counts.items()), key=lambda x: -x[1])]
@@ -82,7 +83,9 @@ class DiscriminativeCIE:
         self.entity_descriptions = load_entity_descriptions()
         self.bi_encoder = init_model(path_to_bi_encoder)
         self.device = torch.device("cpu") if not torch.cuda.is_available() else torch.device("cuda")
-        self.mention_recognizer = PairwiseMentionRecognizer.load_from_checkpoint(path_to_mention_recognizer, model_name="distilbert-base-cased")
+        self.mention_recognizer = PairwiseMentionRecognizer.load_from_checkpoint(path_to_mention_recognizer,
+                                                                                 model_name="distilbert-base-cased",
+                                                                                 map_location=torch.device('cpu'))
         self.alternative_relation_extractor = alternative_relation_extractor
         self.alternative_relation_extractor_use_types = alternative_relation_extractor_use_types
         self.alternative_relation_extractor_deactivate_text = alternative_relation_extractor_deactivate_text
@@ -101,7 +104,8 @@ class DiscriminativeCIE:
                                                                  epochs_of_training_before_regeneration=-1,
                                                                  batch_size=32,
                                                                  number_of_types=num_types,
-                                                                 relations_to_mask=relations_to_mask
+                                                                 relations_to_mask=relations_to_mask,
+                                                                 map_location=torch.device('cpu')
                                                                  )
         self.relation_extractor = None
         if path_to_relation_extractor is not None:
@@ -113,7 +117,8 @@ class DiscriminativeCIE:
                                                                      epochs_of_training_before_regeneration=-1,
                                                                      batch_size=32,
                                                                     number_of_types=len(self.types_index) if self.types_index is not None else None,
-                                                                               relations_to_mask=relations_to_mask
+                                                                               relations_to_mask=relations_to_mask,
+                                                                               map_location=torch.device('cpu')
                                                                      )
             else:
                 if not self.alternative_relation_extractor_use_types:
@@ -123,7 +128,9 @@ class DiscriminativeCIE:
                                                                                          num_relations=len(self.property_indices),
                                                                                          number_of_types=len(
                                                                                              types_index) if types_index else None,
-                                                                                         deactivate_text=self.alternative_relation_extractor_deactivate_text
+                                                                                         deactivate_text=self.alternative_relation_extractor_deactivate_text,
+                                                                                          map_location=torch.device(
+                                                                                              'cpu')
                                                                                          )
 
 
@@ -142,7 +149,6 @@ class DiscriminativeCIE:
         self.bi_encoder.eval()
         self.mention_recognizer.eval()
 
-        self.index_name = "indices/" + hashlib.md5(path_to_bi_encoder.encode('utf-8')).hexdigest()[0:10]
 
         if not os.path.exists(self.index_name):
             os.makedirs(self.index_name)

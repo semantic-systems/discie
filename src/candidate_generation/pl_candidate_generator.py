@@ -7,7 +7,6 @@ import numpy as np
 import pytorch_lightning
 import torch
 import transformers
-from pytorch_lightning.utilities.types import EPOCH_OUTPUT
 from sentence_transformers import InputExample
 from sentence_transformers.util import batch_to_device
 from torch import nn, Tensor
@@ -365,7 +364,7 @@ class PLModule(pytorch_lightning.LightningModule):
         self.log("accuracy", accuracy / counter, on_step=False, on_epoch=True, prog_bar=False)
         return faiss_index, entity_indices
 
-    def validation_epoch_end(self, outputs: EPOCH_OUTPUT) -> None:
+    def validation_epoch_end(self, outputs) -> None:
         val_loss = torch.stack(outputs).mean()
         self.log('val_loss', val_loss, on_step=False, on_epoch=True, prog_bar=True)
 
@@ -805,7 +804,7 @@ class PLCrossEncoder(pytorch_lightning.LightningModule):
         tp, fp, fn, correct_mentions, total_mentions, correct_relations, total_relations = self.calculate_tp_fp_fn(scores, property_scores, candidate_labels, triple_labels, mention_indices, filtering_matrix)
         return loss, rel_loss, cand_loss, tp, fp, fn, correct_mentions, total_mentions, correct_relations, total_relations
 
-    def validation_epoch_end(self, outputs: EPOCH_OUTPUT) -> None:
+    def validation_epoch_end(self, outputs) -> None:
         results = torch.tensor(outputs)
         (loss, rel_loss, cand_loss) = results[:, :3].mean(dim=0)
         (tp, fp, fn, correct_mentions,

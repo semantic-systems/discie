@@ -248,7 +248,7 @@ def load_examples_alt(dataset_file_path: str,
     return CustomDataset(input_examples, raw_examples)
 
 
-def create_mapped_entity_descriptions_file(entity_descriptions_file_path: str = MAIN_PATH + "/graphbasejointelre/data/entity.jsonl"):
+def create_mapped_entity_descriptions_file(entity_descriptions_file_path: str ="/graphbasejointelre/data/entity.jsonl"):
     all_page_ids = set()
     examples = []
     for elem in tqdm(jsonlines.open(entity_descriptions_file_path)):
