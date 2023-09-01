@@ -247,7 +247,7 @@ def get_candidate_generator_tuple(model_name: str):
     if torch.cuda.is_available():
         bi_encoder.cuda()
     bi_encoder.eval()
-    index_name = "/data1/moeller/GenIE/indices/" + hashlib.md5(model_name.encode('utf-8')).hexdigest()[
+    index_name = "indices/" + hashlib.md5(model_name.encode('utf-8')).hexdigest()[
                                                         0:10]
 
     index_path = index_name + "/faiss.index"
@@ -290,9 +290,9 @@ def annotate_dataset(dataset_path, candidate_generation_tuple, mention_recognize
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset_path", type=str, required=True)
-    parser.add_argument("--model_name", type=str, default="/data1/moeller/GenIE/run_training_bi_encoder_new")
+    parser.add_argument("--model_name", type=str, default="run_training_bi_encoder_new")
     parser.add_argument("--mention_recognizer_path", type=str,
-                           default="/data1/moeller/GenIE/mention_recognizer_2023-07-22_18-10-13/model-epoch=06-val_f1=0.85_val_f1.ckpt")
+                           default="mention_recognizer_2023-07-22_18-10-13/model-epoch=06-val_f1=0.85_val_f1.ckpt")
     args = parser.parse_args()
     mention_recognizer = PairwiseMentionRecognizer.load_from_checkpoint(args.mention_recognizer_path,
                                                                         model_name="distilbert-base-cased")

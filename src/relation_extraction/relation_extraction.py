@@ -410,8 +410,8 @@ def set_seed(seed=42):
 
 
 def remap():
-    types_dictionary = json.load(open("/data1/moeller/GenIE/item_types_relation_extraction.json"))
-    new_types_dictionary = jsonlines.open("/data1/moeller/GenIE/item_types_relation_extraction.jsonl", "w")
+    types_dictionary = json.load(open("data/item_types_relation_extraction.json"))
+    new_types_dictionary = jsonlines.open("data/item_types_relation_extraction.jsonl", "w")
     for k, v in tqdm(types_dictionary.items()):
         new_types_dictionary.write({"item": k, "types": v})
 
@@ -419,7 +419,7 @@ def get_type_dictionary(filter_set=None):
     types_dictionary = {}
     types_to_include = set()
     counter = 0
-    for item in jsonlines.open("/data1/moeller/GenIE/item_types_relation_extraction_alt.jsonl"):
+    for item in jsonlines.open("data/item_types_relation_extraction_alt.jsonl"):
         if filter_set is not None and item["item"] not in filter_set:
             continue
         types_dictionary[item["item"]] = set(item["types"])
@@ -444,8 +444,8 @@ def get_all_eligible_qids(dataset_path: str, property_indices):
 
     return all_qids
 def main(model_name: str = "sentence-transformers/all-MiniLM-L12-v2", output_path: str = "relation_extractor",
-         train_dataset_path: str = "/data1/moeller/GenIE/data/rebel/en_train.jsonl",
-         val_dataset_path: str = "/data1/moeller/GenIE/data/rebel/en_val.jsonl",
+         train_dataset_path: str = "data/rebel/en_train.jsonl",
+         val_dataset_path: str = "data/rebel/en_val.jsonl",
          batch_size=16,
          include_types=True,
          deactivate_text=False):

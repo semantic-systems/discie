@@ -141,10 +141,8 @@ def main(args, skip_dumping=False):
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
     argparser.add_argument("--model_checkpoint", type=str, default="flair")
-    argparser.add_argument("--dataset_path", type=str, default="/data1/moeller/GenIE/data/rebel_small/en_test_small_filtered.jsonl")
+    argparser.add_argument("--dataset_path", type=str, default="data/rebel_small/en_test_small_filtered.jsonl")
     argparser.add_argument("--suffix", type=str, default="spacy")
     args = argparser.parse_args()
     main(args)
 
-
-# /data1/moeller/GenIE/ner_small/checkpoint-5775

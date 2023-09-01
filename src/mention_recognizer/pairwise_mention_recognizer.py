@@ -471,12 +471,12 @@ def set_seed(seed=42):
     torch.cuda.manual_seed_all(seed)
 
 
-def get_candidate_generator_tuple(model_name: str="/data1/moeller/GenIE/run_training_bi_encoder_new"):
+def get_candidate_generator_tuple(model_name: str="run_training_bi_encoder_new"):
     bi_encoder = init_model(model_name)
     if torch.cuda.is_available():
         bi_encoder.cuda()
     bi_encoder.eval()
-    index_name = "/data1/moeller/GenIE/indices/" + hashlib.md5(model_name.encode('utf-8')).hexdigest()[
+    index_name = "indices/" + hashlib.md5(model_name.encode('utf-8')).hexdigest()[
                                                         0:10]
 
     index_path = index_name + "/faiss.index"
@@ -487,8 +487,8 @@ def get_candidate_generator_tuple(model_name: str="/data1/moeller/GenIE/run_trai
 
 
 def main(model_name: str = "distilbert-base-cased", output_path: str = "mention_recognizer",
-         train_dataset_path: str = "/data1/moeller/GenIE/data/rebel_small/en_train_small_filtered.jsonl",
-         val_dataset_path: str = "/data1/moeller/GenIE/data/rebel_small/en_val_small_v2_filtered.jsonl",
+         train_dataset_path: str = "data/rebel_small/en_train_small_filtered.jsonl",
+         val_dataset_path: str = "data/rebel_small/en_val_small_v2_filtered.jsonl",
          model_path: str = None,
          batch_size=16):
     set_seed()
@@ -553,8 +553,8 @@ def main(model_name: str = "distilbert-base-cased", output_path: str = "mention_
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
     argparser.add_argument("--model_path", type=str, default=None)
-    argparser.add_argument("--train_dataset_path", type=str, default="/data1/moeller/GenIE/data/rebel/en_train.jsonl")
-    argparser.add_argument("--val_dataset_path", type=str, default="/data1/moeller/GenIE/data/rebel/en_val.jsonl")
+    argparser.add_argument("--train_dataset_path", type=str, default="data/rebel/en_train.jsonl")
+    argparser.add_argument("--val_dataset_path", type=str, default="data/rebel/en_val.jsonl")
     args = argparser.parse_args()
 
     main(train_dataset_path=args.train_dataset_path, val_dataset_path=args.val_dataset_path, model_path=args.model_path)

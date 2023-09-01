@@ -87,7 +87,7 @@ def get_tokenized_dataset(dataset_path: str, tokenizer):
 
     return TokenClassificationDataset(all_examples)
 
-def train(model_name: str = "distilbert-base-cased", output_path: str = "bert-finetuned-ner", dataset_path: str = "/data1/moeller/GenIE/data/rebel_small/en_train_small_filtered.jsonl"):
+def train(model_name: str = "distilbert-base-cased", output_path: str = "bert-finetuned-ner", dataset_path: str = "data/rebel_small/en_train_small_filtered.jsonl"):
     id2label = {i: label for i, label in enumerate(label_names)}
     label2id = {v: k for k, v in id2label.items()}
 
@@ -100,7 +100,7 @@ def train(model_name: str = "distilbert-base-cased", output_path: str = "bert-fi
     )
 
     train_dataset = get_tokenized_dataset(dataset_path, tokenizer)
-    dev_dataset = get_tokenized_dataset("/data1/moeller/GenIE/data/rebel_small/en_val_small_v2_filtered.jsonl", tokenizer)
+    dev_dataset = get_tokenized_dataset("data/rebel_small/en_val_small_v2_filtered.jsonl", tokenizer)
 
     args = TrainingArguments(
         output_path,
@@ -146,12 +146,12 @@ if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
     argparser.add_argument("--model_name", type=str, default="distilbert-base-cased")
     argparser.add_argument("--mode", type=str, default="train")
-    argparser.add_argument("--dataset_path", type=str, default="/data1/moeller/GenIE/data/rebel_small/en_train_small_filtered.jsonl")
+    argparser.add_argument("--dataset_path", type=str, default="data/rebel_small/en_train_small_filtered.jsonl")
     argparser.add_argument("--output_path", type=str, default="bert-finetuned-ner")
     args = argparser.parse_args()
 
     if args.mode == "train":
-        wandb.init(project="mention_recognizer_genie", name=args.output_path)
+        wandb.init(project="mention_recognizer", name=args.output_path)
         train(args.model_name, args.output_path, args.dataset_path)
     elif args.mode == "eval":
         eval(args.model_name, args.dataset_path)

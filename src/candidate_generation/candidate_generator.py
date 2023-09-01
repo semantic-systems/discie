@@ -31,10 +31,9 @@ from src.candidate_generation.pl_candidate_generator import PLModule, create_dat
 from src.candidate_generation.special_tokens import CXS_TOKEN, CXE_TOKEN, TXS_TOKEN
 from src.cie_utils.utils import map_page_ids_to_wikidata_ids
 
-MAIN_PATH="/data1/moeller"
 
 
-def load_entity_descriptions(entity_descriptions_file_path: str = MAIN_PATH + "/GenIE/entity_wikidata_mapped.jsonl"):
+def load_entity_descriptions(entity_descriptions_file_path: str = "data/entity_wikidata_mapped.jsonl"):
     entity_descriptions_dict = {}
     for elem in tqdm(jsonlines.open(entity_descriptions_file_path)):
         qid = elem["qid"]
@@ -112,7 +111,7 @@ def load_dataset(dataset_file_path: str, full_dataset: bool = False):
 
 
 def load_examples(dataset_file_path: str,
-                  entity_descriptions_file_path: str = MAIN_PATH + "/GenIE/entity_wikidata_mapped.jsonl") -> Tuple[List[InputExample], dict]:
+                  entity_descriptions_file_path: str = "data/entity_wikidata_mapped.jsonl") -> Tuple[List[InputExample], dict]:
     input_examples = []
     entity_descriptions_dict = load_entity_descriptions(entity_descriptions_file_path)
 
@@ -1042,7 +1041,7 @@ def create_dataset_with_hard_negatives(training_examples: List[InputExample], en
     return new_training_examples
 
 
-def load_property_indices(filename: str = MAIN_PATH + "/GenIE/data/surface_form_dicts/rel_id2surface_form.jsonl"):
+def load_property_indices(filename: str ="data/rel_id2surface_form.jsonl"):
     properties = []
     for elem in jsonlines.open(filename):
         properties.append(elem["wikidata_id"])
@@ -1060,7 +1059,7 @@ def get_type_dictionary(filter_set=None, types_index=None):
     types_dictionary = {}
     types_to_include = set()
     counter = 0
-    for item in tqdm(jsonlines.open("/data1/moeller/GenIE/item_types_relation_extraction_alt.jsonl")):
+    for item in tqdm(jsonlines.open("data/item_types_relation_extraction_alt.jsonl")):
         if filter_set is not None and item["item"] not in filter_set:
             continue
         if types_index is not None:
@@ -1190,8 +1189,8 @@ def train_crossencoder(training_dataset: str,
 
     trainer.fit(module, train_dataloader, dev_dataloader)
 
-def train(training_dataset: str = MAIN_PATH + "/GenIE/data/rebel/en_train_mapped.jsonl",
-          eval_dataset: str = MAIN_PATH + "/GenIE/data/rebel/en_val_mapped.jsonl",
+def train(training_dataset: str =  "data/rebel/en_train_mapped.jsonl",
+          eval_dataset: str = "data/rebel/en_val_mapped.jsonl",
           normalize: bool = True,
           output_path: str = "runs_training_bi_encoder",
           epochs_of_training_before_regeneration: int = None,
@@ -1400,12 +1399,12 @@ if __name__ == "__main__":
     #  furthermore there should be a train mode and a model for generating an index for the entities
     # train should only accept a mapped dataset, a mapped dataset is the original path of the dataset with _mapped in front of the file ending
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model_directory", type=str, default="/GenIE/small")
-    parser.add_argument("--train_dataset", type=str, default=MAIN_PATH + "/GenIE/data/rebel_small/en_train_small_filtered.jsonl",
+    parser.add_argument("--model_directory", type=str, default="models/small")
+    parser.add_argument("--train_dataset", type=str, default="data/rebel_small/en_train_small_filtered.jsonl",
                         help="Path to the training dataset")
     parser.add_argument("--output_path", type=str, default="run_training_bi_encoder",
                         help="Path to the output directory")
-    parser.add_argument("--eval_dataset", type=str, default=MAIN_PATH + "/GenIE/data/rebel_small/en_val_small_v2_filtered.jsonl",
+    parser.add_argument("--eval_dataset", type=str, default="data/rebel_small/en_val_small_v2_filtered.jsonl",
                         help="Path to the evaluation dataset")
     parser.add_argument("--normalize", type=bool, default=True,
                         help="Whether to normalize the embeddings")
@@ -1415,13 +1414,13 @@ if __name__ == "__main__":
     parser.add_argument("--batch_size", type=int, default=128)
     parser.add_argument("--num_candidates", type=int, default=10)
     parser.add_argument("--candidate_weight", type=float, default=1.0)
-    parser.add_argument("--training_candidate_set_path", type=str, default=MAIN_PATH + "/GenIE/data/rebel/en_train_mapped_candidate_set.json",
+    parser.add_argument("--training_candidate_set_path", type=str, default= "data/rebel/en_train_mapped_candidate_set.json",
                         help="Path to the training candidate set")
-    parser.add_argument("--eval_candidate_set_path", type=str, default=MAIN_PATH + "/GenIE/data/rebel/en_val_mapped_candidate_set.json",
+    parser.add_argument("--eval_candidate_set_path", type=str, default="data/rebel/en_val_mapped_candidate_set.json",
                         help="Path to the evaluation candidate set")
     parser.add_argument("--mode", type=lambda x: MODE[x], default=MODE.TRAIN,
                         help="Whether to train the model, create an index or generate candidates")
-    parser.add_argument("--candidate_generation_dataset", type=str, default=MAIN_PATH + "/GenIE/data/rebel/en_train_small_filtered.jsonl",
+    parser.add_argument("--candidate_generation_dataset", type=str, default= "data/rebel/en_train_small_filtered.jsonl",
                         help="Path to the dataset for which to generate candidates")
     parser.add_argument("--checkpoint_path", type=str)
     parser.add_argument("--types_index_path", type=str, default=None)

@@ -53,13 +53,13 @@ def get_filter_set():
 
 
 filter_set = get_filter_set()
-superclass_mapping = json.load(open("/data1/moeller/GenIE/class_superclasses.json"))
+superclass_mapping = json.load(open("data/class_superclasses.json"))
 
 item_types, type_frequencies = get_item_types_and_frequencies(superclass_mapping, filter_set)
 
 type_dict = {key: list({x for v in value.values() for x in v}) for key, value in item_types.items() }
 
-new_types_dictionary = jsonlines.open("/data1/moeller/GenIE/item_types_relation_extraction_alt.jsonl", "w")
+new_types_dictionary = jsonlines.open("data/item_types_relation_extraction_alt.jsonl", "w")
 for k, v in tqdm(type_dict.items()):
     new_types_dictionary.write({"item": k, "types": v})
 

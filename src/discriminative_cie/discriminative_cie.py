@@ -57,8 +57,8 @@ class DiscriminativeCIE:
                  alternative_relation_extractor_deactivate_text: bool = False,):
 
 
-        relation_counts = json.load(open("/data1/moeller/GenIE/relation_counts.json"))
-        rel_id2surface_form = {item["information"]["en_title"]: item["wikidata_id"] for item in jsonlines.open("/data1/moeller/GenIE/data/surface_form_dicts/rel_id2surface_form.jsonl")}
+        relation_counts = json.load(open("data/relation_counts.json"))
+        rel_id2surface_form = {item["information"]["en_title"]: item["wikidata_id"] for item in jsonlines.open("data/surface_form_dicts/rel_id2surface_form.jsonl")}
         rel_id2surface_form_inverse = {v: k for k, v in rel_id2surface_form.items()}
         self.relation_counts = {rel_id2surface_form[k]: v for k, v in relation_counts.items()}
         self.rel_names_descending = [i[0] for i in sorted(list(self.relation_counts.items()), key=lambda x: -x[1])]
@@ -142,7 +142,7 @@ class DiscriminativeCIE:
         self.bi_encoder.eval()
         self.mention_recognizer.eval()
 
-        self.index_name = "/data1/moeller/GenIE/indices/" + hashlib.md5(path_to_bi_encoder.encode('utf-8')).hexdigest()[0:10]
+        self.index_name = "indices/" + hashlib.md5(path_to_bi_encoder.encode('utf-8')).hexdigest()[0:10]
 
         if not os.path.exists(self.index_name):
             os.makedirs(self.index_name)
@@ -1082,11 +1082,11 @@ if __name__ == '__main__':
     argparser.add_argument("--alternative_relation_extractor_deactivate_text", action="store_true", default=False)
     argparser.add_argument("--disambiguation_mode", type=lambda x: DisambiguationMode[x], default=DisambiguationMode.SIMPLE,
                            choices=[elem for elem in DisambiguationMode])
-    argparser.add_argument("--dataset_path", type=str, default="/data1/moeller/GenIE/data/rebel_small/en_val_small_v2_filtered.jsonl")
-    argparser.add_argument("--bi_encoder_path", type=str, default="/data1/moeller/GenIE/run_training_bi_encoder_new")
-    argparser.add_argument("--mention_recognizer_path", type=str, default="/data1/moeller/GenIE/mention_recognizer_2023-07-22_18-10-13/model-epoch=06-val_f1=0.85_val_f1.ckpt")
-    argparser.add_argument("--crossencoder_path", type=str, default="/data1/moeller/GenIE/crossencoder_checkpoints/model-epoch=13-val_triple_f1=0.85_triple_f1.ckpt")
-    argparser.add_argument("--relation_extractor_path", type=str, default="/data1/moeller/GenIE/cross_encoder_2023-07-26_16-30-38/model-epoch=25-val_triple_f1=0.90_triple_f1.ckpt")
+    argparser.add_argument("--dataset_path", type=str, default="data/rebel_small/en_val_small_v2_filtered.jsonl")
+    argparser.add_argument("--bi_encoder_path", type=str, default="models/run_training_bi_encoder_new")
+    argparser.add_argument("--mention_recognizer_path", type=str, default="models/mention_recognizer_2023-07-22_18-10-13/model-epoch=06-val_f1=0.85_val_f1.ckpt")
+    argparser.add_argument("--crossencoder_path", type=str, default="models/crossencoder_checkpoints/model-epoch=13-val_triple_f1=0.85_triple_f1.ckpt")
+    argparser.add_argument("--relation_extractor_path", type=str, default="models/cross_encoder_2023-07-26_16-30-38/model-epoch=25-val_triple_f1=0.90_triple_f1.ckpt")
     argparser.add_argument("--entity_restrictions", type=str, default=None)
     argparser.add_argument("--property_restrictions", type=str, default=None)
     argparser.add_argument("--mention_threshold", type=float, default=0.5)
@@ -1095,8 +1095,6 @@ if __name__ == '__main__':
     argparser.add_argument("--num_candidates", type=int, default=10)
     argparser.add_argument("--mode", type=lambda x: Mode[x], default=Mode.ET)
     args = argparser.parse_args()
-
-    # mention_recognizer_path = "/data1/moeller/GenIE/mention_recognizer_2023-07-13_13-06-28/model-epoch=05-val_f1=0.82_val_f1.ckpt"
 
     main(args.dataset_path, args.include_property_scores, args.include_mention_scores, args.disambiguation_mode,
          args.bi_encoder_path, args.mention_recognizer_path, args.crossencoder_path, args.relation_extractor_path,
