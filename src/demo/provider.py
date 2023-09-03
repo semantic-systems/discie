@@ -31,6 +31,12 @@ app = Flask(__name__)
 def process_text():
     data = request.get_json()
     input_text = data['text']
+    threshold1 = data['threshold1']
+    threshold2 = data['threshold2']
+    threshold3 = data['threshold3']
+    discie.mention_threshold = threshold1
+    discie.property_threshold = threshold2
+    discie.combined_threshold = threshold3
     disambiguated, _ = discie.run([{"text":input_text}])
 
     nodes = set()

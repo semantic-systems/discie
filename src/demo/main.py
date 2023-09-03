@@ -29,21 +29,50 @@ alt_graph.add_node("C", label="Node Cf")
 
 # Define the app layout
 app.layout = html.Div([
-    html.H1("Graph Visualization with Dash and pyvis"),
-    dcc.Input(id='input-text', type='text', placeholder='Enter graph data here', size='100'),
+    html.H1("DISCIE Demo"),
 
-    html.Button('Update Graph', id='button-update-graph', n_clicks=0),
+# Add Divs to display threshold values
 
-    html.Iframe(id='graph-output', srcDoc=open("graph.html", "r").read(), width='100%', height='600'),
+html.Div([
+html.Label("Mention threshold:", style={'width': '9%', 'margin-right': '1px', 'display': 'inline-block'}),
+        html.Div([
+            dcc.Slider(id='threshold1-slider', min=0, max=1, step=0.01, value=0.1, marks={0: '0', 1: '1'}, tooltip={'placement': 'top', 'always_visible': True}),
+        ], style={'display': 'inline-block', 'width': '80%'}),
+    ], style={'display': 'flex', 'align-items': 'center'}),
+html.Div([
+        html.Label("Property threshold:", style={'width': '9%', 'margin-right': '1px', 'display': 'inline-block'}),
+        html.Div([
+            dcc.Slider(id='threshold2-slider', min=0, max=1, step=0.01, value=0.3, marks={0: '0', 1: '1'}, tooltip={'placement': 'top', 'always_visible': True}),
+        ], style={'display': 'inline-block', 'width': '80%'}),
+    ], style={'display': 'flex', 'align-items': 'center'}),
+
+html.Div([
+        html.Label("Combined threshold:", style={'width': '9%', 'margin-right': '1px' ,'display': 'inline-block'} ),
+        html.Div([
+            dcc.Slider(id='threshold3-slider', min=0, max=1, step=0.01, value=0.3, marks={0: '0', 1: '1'}, tooltip={'placement': 'top', 'always_visible': True}),
+        ], style={'display': 'inline-block', 'width': '80%'}),
+    ], style={'display': 'flex', 'align-items': 'center'}),
+
+    dcc.Textarea(id='input-text', placeholder='Enter your text here!', rows=5, style={'width': '80%'}),
+    html.Button('Update Graph', id='button-update-graph', n_clicks=0, style={'color': 'white', 'background-color': '#009688', 'width': '80%'}),
+
+    html.Iframe(id='graph-output', srcDoc=open("graph.html", "r").read(), width='80%', height='600'),
 ])
 
 
 @app.callback(Output('graph-output', 'srcDoc'), [Input('button-update-graph', 'n_clicks')],
-              [State('input-text', 'value')])
-def update_graph(n_clicks, input_text):
+              [State('input-text', 'value'),
+               State('threshold1-slider', 'value'),
+               State('threshold2-slider', 'value'),
+               State('threshold3-slider', 'value')]
+              )
+def update_graph(n_clicks, input_text, threshold1, threshold2, threshold3):
     ctx = dash.callback_context
     if ctx.triggered[0]['prop_id'] == 'button-update-graph.n_clicks':
-        response = requests.post('http://localhost:5001/process_text', json={'text': input_text})
+        response = requests.post('http://localhost:5001/process_text', json={'text': input_text,
+                                                                              'threshold1': threshold1,
+                                                                              'threshold2': threshold2,
+                                                                              'threshold3': threshold3})
         if response.status_code == 200:
             graph = Network(directed=True)
             graph_data = response.json()
@@ -56,12 +85,6 @@ def update_graph(n_clicks, input_text):
             graph.show("graph.html")
 
         return open("graph.html", "r").read()
-
-# @app.callback(Output('graph-output', 'srcDoc'), [Input('input', 'value')])
-# def update_graph(input_value):
-#     if input_value:
-#         alt_graph.show("graph.html")
-#     return open("graph.html", "r").read()
 
 if __name__ == "__main__":
     app.run(debug=True)
