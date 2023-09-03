@@ -2,6 +2,7 @@ import argparse
 import json
 import math
 import os
+import pickle
 from collections import defaultdict
 from datetime import datetime
 from enum import Enum
@@ -259,7 +260,7 @@ def create_mapped_entity_descriptions_file(entity_descriptions_file_path: str ="
             "title": elem["title"],
             "text": elem["text"]
         })
-    wikipedia_id2wikidata_id = json.load(open(MAIN_PATH + "/graphbasejointelre/data/wikipedia_wikidata_mapping.json"))
+    wikipedia_id2wikidata_id = json.load(open( "/graphbasejointelre/data/wikipedia_wikidata_mapping.json"))
     not_found = all_page_ids.difference(set(wikipedia_id2wikidata_id.keys()))
 
     all_available_wikidata_ids = set()
@@ -1059,6 +1060,9 @@ def get_type_dictionary(filter_set=None, types_index=None):
     types_dictionary = {}
     types_to_include = set()
     counter = 0
+    #if Path("data/types_dictionary.pkl").exists():
+    #    types_dictionary = pickle.load(open("data/types_dictionary.pkl", "rb"))
+    #else:
     for item in tqdm(jsonlines.open("data/item_types_relation_extraction_alt.jsonl")):
         if filter_set is not None and item["item"] not in filter_set:
             continue
@@ -1070,6 +1074,8 @@ def get_type_dictionary(filter_set=None, types_index=None):
         counter += 1
         #if counter > 100000:
         #    break
+        # Dump to pickle
+        #pickle.dump(types_dictionary, open("data/types_dictionary.pkl", "wb"))
     types_to_include = sorted(list(types_to_include))
     if types_index is None:
         types_index = {t: i for i, t in enumerate(types_to_include)}
@@ -1426,7 +1432,7 @@ if __name__ == "__main__":
     parser.add_argument("--types_index_path", type=str, default=None)
     parser.add_argument("--filter_set_path", type=str, default=None)
     args = parser.parse_args()
-    model_directory = MAIN_PATH + args.model_directory
+    model_directory =  args.model_directory
     faiss_index_name = f"faiss_index_{model_directory.split('/')[-1]}"
     faiss_indices_name = f"entity_indices_{faiss_index_name}.json"
     if not os.path.exists(args.eval_dataset.replace(".jsonl", "_mapped.jsonl")):

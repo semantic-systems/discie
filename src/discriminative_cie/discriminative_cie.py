@@ -89,9 +89,22 @@ class DiscriminativeCIE:
         self.alternative_relation_extractor = alternative_relation_extractor
         self.alternative_relation_extractor_use_types = alternative_relation_extractor_use_types
         self.alternative_relation_extractor_deactivate_text = alternative_relation_extractor_deactivate_text
+        if not os.path.exists(self.index_name):
+            os.makedirs(self.index_name)
+
+        index_path = self.index_name + "/faiss.index"
+        indices_path = self.index_name + "/faiss.indices"
+        if not os.path.exists(index_path):
+            create_faiss_index_for_entity_descriptions(self.bi_encoder, True, index_path, indices_path)
+        print("Loading faiss index")
+        self.faiss_index = faiss.read_index(index_path)
+        self.entity_indices = json.load(open(indices_path))
+        print("Done loading faiss index")
 
         if types_index is not None:
+            print("Loading types index")
             self.types_dictionary, self.types_index = get_type_dictionary(all_qids, types_index)
+            print("Done loading types index")
         else:
             self.types_index = None
             self.types_dictionary = {}
@@ -149,16 +162,6 @@ class DiscriminativeCIE:
         self.bi_encoder.eval()
         self.mention_recognizer.eval()
 
-
-        if not os.path.exists(self.index_name):
-            os.makedirs(self.index_name)
-
-        index_path = self.index_name + "/faiss.index"
-        indices_path = self.index_name + "/faiss.indices"
-        if not os.path.exists(index_path):
-            create_faiss_index_for_entity_descriptions(self.bi_encoder, True, index_path, indices_path)
-        self.faiss_index = faiss.read_index(index_path)
-        self.entity_indices = json.load(open(indices_path))
         self.num_candidates = num_candidates
         self.mention_threshold = mention_threshold
         self.combined_threshold = combined_threshold

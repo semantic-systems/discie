@@ -1,6 +1,8 @@
 import json
+import threading
 
 import dash
+import requests
 from dash import dcc
 from dash import html
 from dash.dependencies import Input, Output, State
@@ -28,7 +30,7 @@ alt_graph.add_node("C", label="Node Cf")
 # Define the app layout
 app.layout = html.Div([
     html.H1("Graph Visualization with Dash and pyvis"),
-    dcc.Input(id='input-text', type='text', placeholder='Enter graph data here'),
+    dcc.Input(id='input-text', type='text', placeholder='Enter graph data here', size='100'),
 
     html.Button('Update Graph', id='button-update-graph', n_clicks=0),
 
@@ -36,33 +38,22 @@ app.layout = html.Div([
 ])
 
 
-def instantiate_discie():
-
-    types_index = json.load(open(f"models/types_index_relations.json"))
-
-    alt_num_types = len(json.load(open(f"models/types_index_cross.json")))
-
-    return DiscriminativeCIE("models/run_training_bi_encoder_new",
-                               "models/model-epoch=06-val_f1=0.85_val_f1.ckpt",
-                               "models/model-epoch=13-val_triple_f1=0.85_triple_f1.ckpt",
-                               "models/model-epoch=25-val_triple_f1=0.90_triple_f1.ckpt",
-                               types_index=types_index,
-                               include_mention_scores=True,
-                               alt_num_types=alt_num_types,
-                               mention_threshold=0.1,
-                               property_threshold=0.5,
-                               combined_threshold=0.7,
-                               num_candidates=10
-                               )
-
-
-discie = instantiate_discie()
 @app.callback(Output('graph-output', 'srcDoc'), [Input('button-update-graph', 'n_clicks')],
               [State('input-text', 'value')])
 def update_graph(n_clicks, input_text):
     ctx = dash.callback_context
     if ctx.triggered[0]['prop_id'] == 'button-update-graph.n_clicks':
-        alt_graph.show("graph.html")
+        response = requests.post('http://localhost:5001/process_text', json={'text': input_text})
+        if response.status_code == 200:
+            graph = Network(directed=True)
+            graph_data = response.json()
+            print(graph_data)
+            for node in graph_data['nodes']:
+                graph.add_node(node['id'], label=node['id'])
+            for edge in graph_data['edges']:
+                graph.add_edge(edge['source'], edge['target'], label=edge['label'])
+
+            graph.show("graph.html")
 
         return open("graph.html", "r").read()
 
@@ -73,6 +64,6 @@ def update_graph(n_clicks, input_text):
 #     return open("graph.html", "r").read()
 
 if __name__ == "__main__":
-    app.run_server(debug=True)
+    app.run(debug=True)
 
 
