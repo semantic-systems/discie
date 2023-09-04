@@ -1056,14 +1056,15 @@ def load_candidates(candidate_set_path: str):
     return json.load(open(candidate_set_path))
 
 
-def get_type_dictionary(filter_set=None, types_index=None):
+def get_type_dictionary(filter_set=None, types_index=None,
+                        type_dictionary_file: str = "data/item_types_relation_extraction_alt.jsonl"):
     types_dictionary = {}
     types_to_include = set()
     counter = 0
     #if Path("data/types_dictionary.pkl").exists():
     #    types_dictionary = pickle.load(open("data/types_dictionary.pkl", "rb"))
     #else:
-    for item in tqdm(jsonlines.open("data/item_types_relation_extraction_alt.jsonl")):
+    for item in tqdm(jsonlines.open(type_dictionary_file)):
         if filter_set is not None and item["item"] not in filter_set:
             continue
         if types_index is not None:
@@ -1110,7 +1111,8 @@ def train_crossencoder(training_dataset: str,
                        include_types=True,
                        candidate_weight=1.0,
                        num_candidates=10,
-                       types_index_path: str = None):
+                       types_index_path: str = None,
+                       type_dictionary_file: str = "data/item_types_relation_extraction_alt.jsonl"):
     if Path(output_path).exists():
         output_path = output_path + "_" + str(datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
     os.makedirs(output_path, exist_ok=True)
@@ -1124,7 +1126,7 @@ def train_crossencoder(training_dataset: str,
     if include_types:
         if types_index_path is not None:
             types_index = json.load(open(types_index_path))
-        types_dictionary, types_index = get_type_dictionary(all_qids, types_index)
+        types_dictionary, types_index = get_type_dictionary(all_qids, types_index, type_dictionary_file)
         json.dump(types_index, open(os.path.join(output_path, "types_index.json"), "w"))
     if checkpoint_path is not None:
         module = PLCrossEncoder.load_from_checkpoint(checkpoint_path, model_name=model_name, num_properties=len(property_indices), entity_descriptions=entity_descriptions,
@@ -1431,6 +1433,7 @@ if __name__ == "__main__":
     parser.add_argument("--checkpoint_path", type=str)
     parser.add_argument("--types_index_path", type=str, default=None)
     parser.add_argument("--filter_set_path", type=str, default=None)
+    parser.add_argument("--type_dictionary_file", type=str, default="data/item_types_relation_extraction_alt.jsonl")
     args = parser.parse_args()
     model_directory =  args.model_directory
     faiss_index_name = f"faiss_index_{model_directory.split('/')[-1]}"
@@ -1459,7 +1462,8 @@ if __name__ == "__main__":
                            checkpoint_path=args.checkpoint_path,
                            candidate_weight=args.candidate_weight,
                            num_candidates=args.num_candidates,
-                           types_index_path=args.types_index_path, include_types=not args.exclude_types)
+                           types_index_path=args.types_index_path, include_types=not args.exclude_types,
+                           type_dictionary_file=args.type_dictionary_file)
     elif args.mode == MODE.CREATE_INDEX:
         create_faiss_index_for_entity_descriptions(model_directory,
                                                    normalize=args.normalize,faiss_index_name=faiss_index_name,
