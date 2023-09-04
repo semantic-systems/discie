@@ -54,7 +54,8 @@ class DiscriminativeCIE:
                  use_boundaries: bool = False,
                  alternative_relation_extractor: bool = False,
                  alternative_relation_extractor_use_types: bool = True,
-                 alternative_relation_extractor_deactivate_text: bool = False,):
+                 alternative_relation_extractor_deactivate_text: bool = False,
+                 only_one_relation_per_pair: bool = False,):
 
         self.index_name = "indices/" + hashlib.md5(Path(path_to_bi_encoder).name.encode('utf-8')).hexdigest()[0:10]
         print(self.index_name)
@@ -70,6 +71,7 @@ class DiscriminativeCIE:
         self.entity_restrictions = load_restrictions(entity_restrictions)
         self.property_restrictions = load_restrictions(property_restrictions)
         self.property_indices = load_property_indices()
+        self.only_one_relation_per_pair = only_one_relation_per_pair
         self.use_boundaries = use_boundaries
         self.num_bootstrap_samples = 50
         self.property_indices_inverse = {v: k for k, v in self.property_indices.items()}
@@ -548,19 +550,21 @@ class DiscriminativeCIE:
                     if key in all_pairs[example_idx]:
                         property_scores = all_pairs[example_idx][key]
                         above_threshold_indices = np.where(property_scores > property_threshold)[0]
+
                         if above_threshold_indices.size > 0:
                             properties = [self.property_indices_inverse[x] for x in above_threshold_indices]
-                            triples.update(zip([qid] * len(properties), properties, [qid_] * len(properties)))
-                        # for idx, score in enumerate(property_scores):
-                        #     if score > property_threshold:
-                        #         property = self.property_indices_inverse[idx]
-                        #         triples.add((qid, property, qid_))
-            # for mention_idx, mention_idx_, qid, qid_, property_scores in all_pairs[example_idx]:
-            #     if (qid, mention_idx) in all_occuring_entities and (qid_, mention_idx_) in all_occuring_entities:
-            #         for idx, score in enumerate(property_scores):
-            #             if score > property_threshold:
-            #                 property = self.property_indices_inverse[idx]
-            #                 triples.add((qid, property, qid_))
+                            above_threshold_property_scores = property_scores[above_threshold_indices]
+                            triples.update(zip([qid] * len(properties), properties, [qid_] * len(properties),
+                                               above_threshold_property_scores))
+            if self.only_one_relation_per_pair:
+                pairwise_dict = defaultdict(list)
+                for triple in triples:
+                    key = tuple(sorted([triple[0], triple[2]]))
+                    pairwise_dict[key].append(triple)
+                triples = set()
+                for key, triples_ in pairwise_dict.items():
+                    max_triple = max(triples_, key=lambda x: x[3])
+                    triples.add((max_triple[0], max_triple[1], max_triple[2]))
             all_occuring_entities = {x[0] for x in all_occuring_entities}
             outputs.append((triples, all_occuring_entities))
         return outputs

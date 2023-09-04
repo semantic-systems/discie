@@ -48,7 +48,8 @@ def instantiate_discie():
                                mention_threshold=0.1,
                                property_threshold=0.3,
                                combined_threshold=0.3,
-                               num_candidates=30
+                               num_candidates=30,
+                             only_one_relation_per_pair=True,
                                )
 
 
@@ -91,8 +92,7 @@ def test():
     return "test"
 
 
-print(get_labels_via_sparql(["P31", "Q76"]))
 
 if __name__ == '__main__':
-    # discie = instantiate_discie()
+    discie = instantiate_discie()
     app.run(host='0.0.0.0', port=5001)

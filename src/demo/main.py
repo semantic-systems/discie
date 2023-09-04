@@ -53,7 +53,7 @@ html.Label("Mention threshold:", style={'width': '9%', 'margin-right': '1px', 'd
 html.Div([
         html.Label("Property threshold:", style={'width': '9%', 'margin-right': '1px', 'display': 'inline-block'}),
         html.Div([
-            dcc.Slider(id='threshold2-slider', min=0, max=1, step=0.01, value=0.3, marks={0: '0', 1: '1'}, tooltip={'placement': 'top', 'always_visible': True}),
+            dcc.Slider(id='threshold2-slider', min=0, max=1, step=0.01, value=0.5, marks={0: '0', 1: '1'}, tooltip={'placement': 'top', 'always_visible': True}),
         ], style={'display': 'inline-block', 'width': '71%'}),
     ], style={'display': 'flex', 'align-items': 'center'}),
 
@@ -92,7 +92,7 @@ def update_graph(n_clicks, input_text, threshold1, threshold2, threshold3):
             graph_data = response.json()
             print(graph_data)
             for node in graph_data['nodes']:
-                graph.add_node(node['id'], label=f"{node['id']}/{node['type']}")
+                graph.add_node(node['id'], label=f"{node['id']}/{node['label']}")
             for edge in graph_data['edges']:
                 graph.add_edge(edge['source'], edge['target'], label=f"{edge['property']}/{edge['property_label']}")
 
