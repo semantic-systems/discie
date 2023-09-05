@@ -12,7 +12,7 @@ def get_item_types_and_frequencies(superclass_mapping: dict = None, type_filter:
     type_frequencies = defaultdict(int)
     encountered_entity_types = set()
     for item in tqdm(
-            jsonlines.open("/data1/moeller/graphbasejointelre/src/wikidata_preprocessing/parsed_wikidata_info.jsonl"),
+            jsonlines.open("data/parsed_wikidata_info.jsonl"),
             total=99004802):
         for p, o in item["triples"]:
             if p in filter_set:
@@ -35,7 +35,7 @@ def get_item_types_and_frequencies(superclass_mapping: dict = None, type_filter:
 
 
 def get_filter_set():
-    content = json.load(open("/export/home/moeller/.cache/refined/wikipedia_data/class_to_idx.json"))
+    content = json.load(open("data/class_to_idx.json"))
     filter_set = set()
     for k, v in content.items():
         pattern = r"Q\d+"

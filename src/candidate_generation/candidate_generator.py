@@ -249,7 +249,7 @@ def load_examples_alt(dataset_file_path: str,
     return CustomDataset(input_examples, raw_examples)
 
 
-def create_mapped_entity_descriptions_file(entity_descriptions_file_path: str ="/graphbasejointelre/data/entity.jsonl"):
+def create_mapped_entity_descriptions_file(entity_descriptions_file_path: str ="data/entity.jsonl"):
     all_page_ids = set()
     examples = []
     for elem in tqdm(jsonlines.open(entity_descriptions_file_path)):
@@ -260,7 +260,7 @@ def create_mapped_entity_descriptions_file(entity_descriptions_file_path: str ="
             "title": elem["title"],
             "text": elem["text"]
         })
-    wikipedia_id2wikidata_id = json.load(open( "/graphbasejointelre/data/wikipedia_wikidata_mapping.json"))
+    wikipedia_id2wikidata_id = json.load(open( "data/wikipedia_wikidata_mapping.json"))
     not_found = all_page_ids.difference(set(wikipedia_id2wikidata_id.keys()))
 
     all_available_wikidata_ids = set()
