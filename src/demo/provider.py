@@ -87,11 +87,6 @@ def process_text():
 
     return jsonify(response)
 
-def test():
-    print("test")
-    return "test"
-
-
 
 if __name__ == '__main__':
     discie = instantiate_discie()
