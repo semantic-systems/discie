@@ -31,43 +31,47 @@ alt_graph.add_node("C", label="Node Cf")
 
 # Define the app layout
 app.layout = html.Div([
-    html.H1("DISCIE Demo", style={'textAlign': 'center'}),
+html.Link(
+        rel='stylesheet',
+        href='src/demo/assets/css/bootstrap.min.css'
+    ),
+    html.H1("DISCIE Demo", style={'textAlign': 'center', 'background-color': '#f2f2f2', 'padding': '10px'}),
 
 # Add Divs to display threshold values
 # Textarea for input
-html.Label("Input Text:", style={'fontSize': 16, }),
+html.Label("Input Text:", style={'fontSize': 16, 'margin-left': '3%', }),
 html.Div([
 dcc.Textarea(
     id='input-text',
     placeholder='Enter your text here!',
     rows=5,
-    style={'width': '75%', 'fontSize': 14}
+    style={'width': '80%', 'fontSize': 14, 'margin-left': '3%'}
 ),
 ]),
 html.Div([
-html.Label("Mention threshold:", style={'width': '9%', 'margin-right': '1px', 'display': 'inline-block'}),
+html.Label("Mention threshold:", style={'width': '9%', 'margin-right': '1px', 'display': 'inline-block', 'margin-left': '3%'}),
         html.Div([
             dcc.Slider(id='threshold1-slider', min=0, max=1, step=0.01, value=0.1, marks={0: '0', 1: '1'}, tooltip={'placement': 'top', 'always_visible': True}),
         ], style={'display': 'inline-block', 'width': '71%'}),
     ], style={'display': 'flex', 'align-items': 'center'}),
 html.Div([
-        html.Label("Property threshold:", style={'width': '9%', 'margin-right': '1px', 'display': 'inline-block'}),
+        html.Label("Property threshold:", style={'width': '9%', 'margin-right': '1px', 'display': 'inline-block', 'margin-left': '3%'}),
         html.Div([
             dcc.Slider(id='threshold2-slider', min=0, max=1, step=0.01, value=0.5, marks={0: '0', 1: '1'}, tooltip={'placement': 'top', 'always_visible': True}),
         ], style={'display': 'inline-block', 'width': '71%'}),
     ], style={'display': 'flex', 'align-items': 'center'}),
 
 html.Div([
-        html.Label("Combined threshold:", style={'width': '9%', 'margin-right': '1px' ,'display': 'inline-block'} ),
+        html.Label("Combined threshold:", style={'width': '9%', 'margin-right': '1px' ,'display': 'inline-block', 'margin-left': '3%'} ),
         html.Div([
             dcc.Slider(id='threshold3-slider', min=0, max=1, step=0.01, value=0.3, marks={0: '0', 1: '1'}, tooltip={'placement': 'top', 'always_visible': True}),
         ], style={'display': 'inline-block', 'width': '71%'}),
     ], style={'display': 'flex', 'align-items': 'center'}),
 
 
-    html.Button('Update Graph', id='button-update-graph', n_clicks=0, style={'color': 'white', 'background-color': '#009688', 'width': '80%'}),
+    html.Button('Update Graph', id='button-update-graph', n_clicks=0, style={'color': 'white', 'background-color': '#009688', 'width': '10%', 'margin-left': '38%'}),
 
-    html.Iframe(id='graph-output', srcDoc=open("graph.html", "r").read(), width='80%', height='600'),
+    html.Iframe(id='graph-output', srcDoc=open("graph.html", "r").read(), width='80%', height='800', style={'margin-left': '3%', 'margin-top': '20px'}),
 ])
 
 
