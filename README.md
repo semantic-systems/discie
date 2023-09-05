@@ -28,19 +28,35 @@ The main command is:
 - `--filter_set_path`: Specify the filter set path (default: None).
 - `--type_dictionary_file`: Specify the type dictionary file (default: "data/item_types_relation_extraction_alt.jsonl").
 
+
+## Training the mention recognizer
+
+Execute the following arguments to train the mention recognizer:
+
+```python src/mention_recognizer/mention_recognizer```
+
+
+### Arguments
+
+- `--model_name`: Specify the pre-trained model name or path (default: "distilbert-base-cased").
+- `--mode`: Set the operational mode (choices: "train," "evaluate," "predict") (default: "train").
+- `--dataset_path`: Path to the training dataset (default: "data/rebel/en_train.jsonl").
+- `--output_path`: Specify the output directory or path (default: "bert-finetuned-ner").
+
+
 ## Training the bi-encoder
 
 Execute the following arguments to train the bi-encoder:
 
 ```python src/candidate/generation/candidate_generator.py --mode TRAIN --train_dataset {train_dataset} --eval_dataset {eval_dataset} ```
 
-The we create an index for the bi-encoder:
+Then we create an index for the bi-encoder:
 
-```python src/candidate/generation/candidate_generator.py --mode INDEX ```
+```python src/candidate/generation/candidate_generator.py --mode INDEX --model_directory {model_directory}```
 ## Training the cross-encoder with relation extraction
 To train the cross-encoder, we need initial candidate sets. We can generate them with the following command:
 
-```python src/candidate/generation/candidate_generator.py --mode CANDIDATES --candidate_generation_dataset {candidate_generation_dataset}```
+```python src/candidate/generation/candidate_generator.py --mode CANDIDATES --model_directory {model_directory} --candidate_generation_dataset {candidate_generation_dataset}```
 
 This has to be done for the validation and training dataset.
 
