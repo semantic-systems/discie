@@ -704,17 +704,17 @@ class DiscriminativeCIE:
         recall = (tp / (tp + fn)) if tp + fn > 0 else 0
         f1 = 2 * ((precision * recall) / (precision + recall)) if precision + recall > 0 else 0
         f2 = 5 * ((precision * recall) / (4 * precision + recall)) if 4 * precision + recall > 0 else 0
-        macro_precision = sum([per_property_tp[x] / (per_property_tp[x] + per_property_fp[x]) if per_property_tp[
+        macro_precision = sum([per_property_tp[x] / (per_property_tp[x] + per_property_fp[x]) if (per_property_tp[
                                                                                                      x] +
                                                                                                  per_property_fp[
-                                                                                                     x] > 0 else 0
+                                                                                                     x]) > 0 else 0
                                for x in per_property_tp]) / len(per_property_tp)
-        macro_recall = sum([per_property_tp[x] / (per_property_tp[x] + per_property_fn[x]) if per_property_tp[x] +
+        macro_recall = sum([per_property_tp[x] / (per_property_tp[x] + per_property_fn[x]) if (per_property_tp[x] +
                                                                                               per_property_fn[
-                                                                                                  x] > 0 else 0 for
+                                                                                                  x]) > 0 else 0 for
                             x in per_property_tp]) / len(per_property_tp)
         macro_f1 = 2 * ((macro_precision * macro_recall) / (
-                macro_precision + macro_recall)) if macro_precision + macro_recall > 0 else 0
+                macro_precision + macro_recall)) if (macro_precision + macro_recall) > 0 else 0
         macro_f2 = 5 * ((macro_precision * macro_recall) / (
                 4 * macro_precision + macro_recall)) if macro_precision + macro_recall > 0 else 0
         per_property_recall = {x: per_property_tp[x] / (per_property_tp[x] + per_property_fn[x]) if per_property_tp[x] + per_property_fn[x] > 0 else 0 for x in per_property_tp}
