@@ -76,7 +76,7 @@ For that, we simply reduce the number of candidates to 0 and eliminate the candi
 The script accepts several command-line arguments for configuring its behavior. Here is a list of available arguments and their descriptions:
 
 - `--debug`: Enable debugging mode (default: False).
-- `--use_boundaries`: Use provided boundaries instead of doing mention recognition (default: False).
+- `--spoof_boundaries`: Use provided boundaries instead of doing mention recognition (default: False).
 - `--include_mention_scores`: Include mention scores into the combined scores (default: False).
 - `--include_property_scores`: Include property scores into the combined scores (default: False).
 - `--alternative_relation_extractor`: Use an alternative relation extractor (default: False).
