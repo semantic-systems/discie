@@ -1,6 +1,8 @@
 import argparse
 import enum
 import json
+import time
+
 import math
 import os
 import random
@@ -52,6 +54,8 @@ class DiscriminativeCIE:
                  entity_restrictions: str=None,
                  property_restrictions: str=None,
                  spoof_boundaries: bool = False,
+                 spoof_candidates: bool = False,
+                 spoof_linking: bool = False,
                  alternative_relation_extractor: bool = False,
                  alternative_relation_extractor_use_types: bool = True,
                  alternative_relation_extractor_deactivate_text: bool = False,
@@ -73,6 +77,8 @@ class DiscriminativeCIE:
         self.property_indices = load_property_indices()
         self.only_one_relation_per_pair = only_one_relation_per_pair
         self.spoof_boundaries = spoof_boundaries
+        self.spoof_candidates = spoof_candidates
+        self.spoof_linking = spoof_linking
         self.num_bootstrap_samples = 50
         self.property_indices_inverse = {v: k for k, v in self.property_indices.items()}
         relations_to_mask = None
@@ -368,7 +374,10 @@ class DiscriminativeCIE:
                             all_pairs[idx][(mention_indices_[i], all_qids_[i], mention_indices_[j], all_qids_[j] )] = property_scores_[i][j]
         score_dict = {example_index: defaultdict(list) for example_index in range(len(texts))}
         for score, mention_idx, example_idx, qid in zip(scores, mention_indices, example_indices, all_qids):
-            score_dict[example_idx][mention_idx].append((qid, score))
+            if self.spoof_linking:
+                score_dict[example_idx][mention_idx].append((qid, 1.0))
+            else:
+                score_dict[example_idx][mention_idx].append((qid, score))
         return score_dict, all_pairs
 
 
@@ -792,12 +801,17 @@ class DiscriminativeCIE:
         return final_metrics, final_per_property_metrics
 
     def benchmark(self, examples):
-        starter, ender = torch.cuda.Event(enable_timing=True), torch.cuda.Event(enable_timing=True)
-        starter.record()
-        disambiguated_graphs, candidate_entities = self.run(examples)
-        ender.record()
-        torch.cuda.synchronize()
-        curr_time = starter.elapsed_time(ender)
+        if torch.cuda.is_available():
+            starter, ender = torch.cuda.Event(enable_timing=True), torch.cuda.Event(enable_timing=True)
+            starter.record()
+            disambiguated_graphs, candidate_entities = self.run(examples)
+            ender.record()
+            torch.cuda.synchronize()
+            curr_time = starter.elapsed_time(ender)
+        else:
+            curr_time = time.time()
+            disambiguated_graphs, candidate_entities = self.run(examples)
+            curr_time = time.time() - curr_time
 
         all_gt_triples = [x["triples"] for x in examples]
         identifiers = [x["identifier"] for x in examples]
@@ -886,6 +900,17 @@ class DiscriminativeCIE:
                     all_boundaries = self.get_boundaries(texts, mention_tokens, tokenized)
                 bi_encoder_input = self.prepare_bi_encoder_input(texts, all_boundaries)
                 candidates = self.get_candidates(bi_encoder_input)
+                if self.spoof_candidates and self.spoof_boundaries:
+                    all_candidates = [x["qids"] for x in all_examples[i:i+batch_size]]
+                    for example_idx in range(len(texts)):
+                        if example_idx in candidates:
+                            for key in candidates[example_idx]:
+                                if self.spoof_linking:
+                                    candidates[example_idx][key] = [(all_candidates[example_idx][key], 1.0)]
+                                else:
+                                    if not any([x[0] == all_candidates[example_idx][key] for x in candidates[example_idx][key]]):
+                                        candidates[example_idx][key].append((all_candidates[example_idx][key], 1.0))
+
                 scores, all_pairs = self.get_cross_encoder_scores(candidates, all_boundaries, texts)
                 for example_idx in range(len(texts)):
                     sub_candidate_entities = set()
@@ -935,14 +960,18 @@ class DiscriminativeCIE:
                 return i
 
 def load_dataset(path, debug=False, available_entities: set=None,
-                 available_properties: set=None, spoof_boundaries: bool=False):
+                 available_properties: set=None, add_true_boundaries: bool=False):
     examples = []
     for idx, item in enumerate(jsonlines.open(path)):
         identifier = item.get("id", idx)
-        if  spoof_boundaries:
-            boundaries, qids = get_boundaries(item)
+        if  add_true_boundaries:
+            try:
+                boundaries, qids = get_boundaries(item)
+            except ValueError:
+                continue
         else:
             boundaries = None
+            qids = None
 
         triples = []
         raw_triples = []
@@ -963,6 +992,7 @@ def load_dataset(path, debug=False, available_entities: set=None,
                 "triples": triples,
                 "identifier": identifier,
                 "boundaries": boundaries,
+                "qids": qids,
             })
 
     if debug:
@@ -1011,6 +1041,8 @@ def main(dataset_path: str, include_property_scores: bool, include_mention_score
          property_threshold: float,
          combined_threshold: float,
          spoof_boundaries: bool,
+         spoof_candidates: bool,
+         spoof_linking: bool,
          alternative_relation_extractor: bool,
          alternative_relation_extractor_use_types: bool,
          alternative_relation_extractor_deactivate_text: bool,
@@ -1047,15 +1079,20 @@ def main(dataset_path: str, include_property_scores: bool, include_mention_score
                                         property_threshold=property_threshold,
                                         combined_threshold=combined_threshold,
                                       spoof_boundaries=spoof_boundaries,
+                                      spoof_candidates=spoof_candidates,
+                                        spoof_linking=spoof_linking,
                                         alternative_relation_extractor=alternative_relation_extractor,
                                         alternative_relation_extractor_use_types=alternative_relation_extractor_use_types,
                                         alternative_relation_extractor_deactivate_text=alternative_relation_extractor_deactivate_text,
                                       num_candidates=num_candidates
                                       )
-
+    if spoof_linking:
+        assert spoof_candidates
+    if  spoof_candidates:
+        assert spoof_boundaries
 
     examples = load_dataset(dataset_path, debug=debug, available_entities=discriminator.entity_descriptions,
-                            available_properties=discriminator.property_indices, spoof_boundaries=spoof_boundaries)
+                            available_properties=discriminator.property_indices, add_true_boundaries=spoof_boundaries)
     if mode == Mode.ET:
         evaluate_different_thresholds(discriminator, examples)
     elif mode == Mode.E:
@@ -1089,17 +1126,19 @@ if __name__ == '__main__':
     argparser.add_argument("--debug", action="store_true", default=False)
     argparser.add_argument("--include_property_scores", action="store_true", default=False)
     argparser.add_argument("--spoof_boundaries", action="store_true", default=False)
+    argparser.add_argument("--spoof_candidates", action="store_true", default=False)
+    argparser.add_argument("--spoof_linking", action="store_true", default=False)
     argparser.add_argument("--include_mention_scores", action="store_true", default=False)
     argparser.add_argument("--alternative_relation_extractor", action="store_true", default=False)
     argparser.add_argument("--alternative_relation_extractor_use_types", action="store_true", default=False)
     argparser.add_argument("--alternative_relation_extractor_deactivate_text", action="store_true", default=False)
     argparser.add_argument("--disambiguation_mode", type=lambda x: DisambiguationMode[x], default=DisambiguationMode.SIMPLE,
                            choices=[elem for elem in DisambiguationMode])
-    argparser.add_argument("--dataset_path", type=str, default="data/rebel_small/en_val_small_v2_filtered.jsonl")
+    argparser.add_argument("--dataset_path", type=str, default="datasets/rebel/en_test.jsonl")
     argparser.add_argument("--bi_encoder_path", type=str, default="models/run_training_bi_encoder_new")
-    argparser.add_argument("--mention_recognizer_path", type=str, default="models/mention_recognizer_2023-07-22_18-10-13/model-epoch=06-val_f1=0.85_val_f1.ckpt")
-    argparser.add_argument("--crossencoder_path", type=str, default="models/crossencoder_checkpoints/model-epoch=13-val_triple_f1=0.85_triple_f1.ckpt")
-    argparser.add_argument("--relation_extractor_path", type=str, default="models/cross_encoder_2023-07-26_16-30-38/model-epoch=25-val_triple_f1=0.90_triple_f1.ckpt")
+    argparser.add_argument("--mention_recognizer_path", type=str, default="models/mention_recognizer/model-epoch=06-val_f1=0.85_val_f1.ckpt")
+    argparser.add_argument("--crossencoder_path", type=str, default="models/cross_encoder/model-epoch=13-val_triple_f1=0.85_triple_f1.ckpt")
+    argparser.add_argument("--relation_extractor_path", type=str, default="models/relation_extractor/model-epoch=25-val_triple_f1=0.90_triple_f1.ckpt")
     argparser.add_argument("--entity_restrictions", type=str, default=None)
     argparser.add_argument("--property_restrictions", type=str, default=None)
     argparser.add_argument("--mention_threshold", type=float, default=0.5)
@@ -1113,6 +1152,7 @@ if __name__ == '__main__':
          args.bi_encoder_path, args.mention_recognizer_path, args.crossencoder_path, args.relation_extractor_path,
             args.entity_restrictions, args.property_restrictions, args.debug, args.mode,
          args.mention_threshold, args.property_threshold, args.combined_threshold, args.spoof_boundaries,
+         args.spoof_candidates, args.spoof_linking,
          args.alternative_relation_extractor, args.alternative_relation_extractor_use_types,
          args.alternative_relation_extractor_deactivate_text,
          args.num_candidates)

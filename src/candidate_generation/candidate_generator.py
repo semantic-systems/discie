@@ -534,7 +534,8 @@ def get_boundaries(example, ignore_boundaries=False, candidate_generation_tuple:
 
 
     # Sort boundaries and ground_truth_qids by boundaries, smallest first
-    boundaries, ground_truth_qids = zip(*sorted(zip(boundaries, ground_truth_qids), key=lambda x: x[0][0]))
+    if boundaries:
+        boundaries, ground_truth_qids = zip(*sorted(zip(boundaries, ground_truth_qids), key=lambda x: x[0][0]))
     # Only allow unique boundaries, if there are multiple entities with the same boundary, only the first one is kept
     # This means that the ground_truth_qids are also shortened
     unique_boundaries = []
