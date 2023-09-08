@@ -59,7 +59,8 @@ class DiscriminativeCIE:
                  alternative_relation_extractor: bool = False,
                  alternative_relation_extractor_use_types: bool = True,
                  alternative_relation_extractor_deactivate_text: bool = False,
-                 only_one_relation_per_pair: bool = False,):
+                 only_one_relation_per_pair: bool = False,
+                 type_dictionary_file: str = "data/item_types_relation_extraction_alt.jsonl",):
 
         self.index_name = "indices/" + hashlib.md5(Path(path_to_bi_encoder).name.encode('utf-8')).hexdigest()[0:10]
         print(self.index_name)
@@ -111,7 +112,7 @@ class DiscriminativeCIE:
 
         if types_index is not None:
             print("Loading types index")
-            self.types_dictionary, self.types_index = get_type_dictionary(all_qids, types_index)
+            self.types_dictionary, self.types_index = get_type_dictionary(all_qids, types_index, type_dictionary_file)
             print("Done loading types index")
         else:
             self.types_index = None
@@ -1046,7 +1047,8 @@ def main(dataset_path: str, include_property_scores: bool, include_mention_score
          alternative_relation_extractor: bool,
          alternative_relation_extractor_use_types: bool,
          alternative_relation_extractor_deactivate_text: bool,
-         num_candidates: int):
+         num_candidates: int,
+         type_dictionary_file: str,):
     debug_seeds = [42, 43, 44, 45, 46]
 
     wandb.init(project="DisCIE")
@@ -1084,7 +1086,8 @@ def main(dataset_path: str, include_property_scores: bool, include_mention_score
                                         alternative_relation_extractor=alternative_relation_extractor,
                                         alternative_relation_extractor_use_types=alternative_relation_extractor_use_types,
                                         alternative_relation_extractor_deactivate_text=alternative_relation_extractor_deactivate_text,
-                                      num_candidates=num_candidates
+                                      num_candidates=num_candidates,
+                                      type_dictionary_file=type_dictionary_file
                                       )
     if spoof_linking:
         assert spoof_candidates
@@ -1145,6 +1148,7 @@ if __name__ == '__main__':
     argparser.add_argument("--property_threshold", type=float, default=0.5)
     argparser.add_argument("--combined_threshold", type=float, default=0.5)
     argparser.add_argument("--num_candidates", type=int, default=10)
+    argparser.add_argument("--type_dictionary_file", type=str, default="data/item_types_relation_extraction_alt.jsonl")
     argparser.add_argument("--mode", type=lambda x: Mode[x], default=Mode.ET)
     args = argparser.parse_args()
 
@@ -1155,7 +1159,8 @@ if __name__ == '__main__':
          args.spoof_candidates, args.spoof_linking,
          args.alternative_relation_extractor, args.alternative_relation_extractor_use_types,
          args.alternative_relation_extractor_deactivate_text,
-         args.num_candidates)
+         args.num_candidates,
+         args.type_dictionary_file)
 
 
 
