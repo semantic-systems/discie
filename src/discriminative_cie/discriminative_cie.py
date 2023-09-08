@@ -575,6 +575,8 @@ class DiscriminativeCIE:
                 for key, triples_ in pairwise_dict.items():
                     max_triple = max(triples_, key=lambda x: x[3])
                     triples.add((max_triple[0], max_triple[1], max_triple[2]))
+            else:
+                triples = {x[:3] for x in triples}
             all_occuring_entities = {x[0] for x in all_occuring_entities}
             outputs.append((triples, all_occuring_entities))
         return outputs
