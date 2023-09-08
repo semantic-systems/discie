@@ -51,7 +51,7 @@ class DiscriminativeCIE:
                  alt_num_types: int = None,
                  entity_restrictions: str=None,
                  property_restrictions: str=None,
-                 use_boundaries: bool = False,
+                 spoof_boundaries: bool = False,
                  alternative_relation_extractor: bool = False,
                  alternative_relation_extractor_use_types: bool = True,
                  alternative_relation_extractor_deactivate_text: bool = False,
@@ -72,7 +72,7 @@ class DiscriminativeCIE:
         self.property_restrictions = load_restrictions(property_restrictions)
         self.property_indices = load_property_indices()
         self.only_one_relation_per_pair = only_one_relation_per_pair
-        self.use_boundaries = use_boundaries
+        self.spoof_boundaries = spoof_boundaries
         self.num_bootstrap_samples = 50
         self.property_indices_inverse = {v: k for k, v in self.property_indices.items()}
         relations_to_mask = None
@@ -818,7 +818,7 @@ class DiscriminativeCIE:
         with torch.no_grad():
             for i in tqdm(range(0, len(all_examples), batch_size)):
                 texts = [x["text"] for x in all_examples[i:i+batch_size]]
-                if self.use_boundaries:
+                if self.spoof_boundaries:
                     all_boundaries = [x["boundaries"] for x in all_examples[i:i+batch_size]]
                     mention_tokens = [[(None, None, 1.0) for y in x["boundaries"]] for x in all_examples[i:i+batch_size]]
                 else:
@@ -871,7 +871,7 @@ class DiscriminativeCIE:
         with torch.no_grad():
             for i in tqdm(range(0, len(all_examples), batch_size)):
                 texts = [x["text"] for x in all_examples[i:i+batch_size]]
-                if self.use_boundaries:
+                if self.spoof_boundaries:
                     all_boundaries = [x["boundaries"] for x in all_examples[i:i+batch_size]]
                     mention_tokens = [[(None, None, 1.0) for y in x["boundaries"]] for x in
                                       all_examples[i:i + batch_size]]
@@ -935,11 +935,11 @@ class DiscriminativeCIE:
                 return i
 
 def load_dataset(path, debug=False, available_entities: set=None,
-                 available_properties: set=None, use_boundaries: bool=False):
+                 available_properties: set=None, spoof_boundaries: bool=False):
     examples = []
     for idx, item in enumerate(jsonlines.open(path)):
         identifier = item.get("id", idx)
-        if  use_boundaries:
+        if  spoof_boundaries:
             boundaries, qids = get_boundaries(item)
         else:
             boundaries = None
@@ -1010,7 +1010,7 @@ def main(dataset_path: str, include_property_scores: bool, include_mention_score
          mention_threshold: float,
          property_threshold: float,
          combined_threshold: float,
-         use_boundaries: bool,
+         spoof_boundaries: bool,
          alternative_relation_extractor: bool,
          alternative_relation_extractor_use_types: bool,
          alternative_relation_extractor_deactivate_text: bool,
@@ -1046,7 +1046,7 @@ def main(dataset_path: str, include_property_scores: bool, include_mention_score
                                         mention_threshold=mention_threshold,
                                         property_threshold=property_threshold,
                                         combined_threshold=combined_threshold,
-                                      use_boundaries=use_boundaries,
+                                      spoof_boundaries=spoof_boundaries,
                                         alternative_relation_extractor=alternative_relation_extractor,
                                         alternative_relation_extractor_use_types=alternative_relation_extractor_use_types,
                                         alternative_relation_extractor_deactivate_text=alternative_relation_extractor_deactivate_text,
@@ -1055,7 +1055,7 @@ def main(dataset_path: str, include_property_scores: bool, include_mention_score
 
 
     examples = load_dataset(dataset_path, debug=debug, available_entities=discriminator.entity_descriptions,
-                            available_properties=discriminator.property_indices, use_boundaries=use_boundaries)
+                            available_properties=discriminator.property_indices, spoof_boundaries=spoof_boundaries)
     if mode == Mode.ET:
         evaluate_different_thresholds(discriminator, examples)
     elif mode == Mode.E:
@@ -1088,7 +1088,7 @@ if __name__ == '__main__':
     argparser = argparse.ArgumentParser()
     argparser.add_argument("--debug", action="store_true", default=False)
     argparser.add_argument("--include_property_scores", action="store_true", default=False)
-    argparser.add_argument("--use_boundaries", action="store_true", default=False)
+    argparser.add_argument("--spoof_boundaries", action="store_true", default=False)
     argparser.add_argument("--include_mention_scores", action="store_true", default=False)
     argparser.add_argument("--alternative_relation_extractor", action="store_true", default=False)
     argparser.add_argument("--alternative_relation_extractor_use_types", action="store_true", default=False)
@@ -1112,7 +1112,7 @@ if __name__ == '__main__':
     main(args.dataset_path, args.include_property_scores, args.include_mention_scores, args.disambiguation_mode,
          args.bi_encoder_path, args.mention_recognizer_path, args.crossencoder_path, args.relation_extractor_path,
             args.entity_restrictions, args.property_restrictions, args.debug, args.mode,
-         args.mention_threshold, args.property_threshold, args.combined_threshold, args.use_boundaries,
+         args.mention_threshold, args.property_threshold, args.combined_threshold, args.spoof_boundaries,
          args.alternative_relation_extractor, args.alternative_relation_extractor_use_types,
          args.alternative_relation_extractor_deactivate_text,
          args.num_candidates)
