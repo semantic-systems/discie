@@ -60,7 +60,7 @@ class DiscriminativeCIE:
                  alternative_relation_extractor_use_types: bool = True,
                  alternative_relation_extractor_deactivate_text: bool = False,
                  only_one_relation_per_pair: bool = False,
-                 type_dictionary_file: str = "data/item_types_relation_extraction_alt.jsonl",):
+                 type_dictionary_file: str = "data/item_types_relation_extraction.jsonl",):
 
         self.index_name = "indices/" + hashlib.md5(Path(path_to_bi_encoder).name.encode('utf-8')).hexdigest()[0:10]
         print(self.index_name)
@@ -1150,7 +1150,7 @@ if __name__ == '__main__':
     argparser.add_argument("--property_threshold", type=float, default=0.5)
     argparser.add_argument("--combined_threshold", type=float, default=0.5)
     argparser.add_argument("--num_candidates", type=int, default=10)
-    argparser.add_argument("--type_dictionary_file", type=str, default="data/item_types_relation_extraction_alt.jsonl")
+    argparser.add_argument("--type_dictionary_file", type=str, default="data/item_types_relation_extraction.jsonl")
     argparser.add_argument("--mode", type=lambda x: Mode[x], default=Mode.ET)
     args = argparser.parse_args()
 
