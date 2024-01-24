@@ -24,7 +24,6 @@ from transformers import AutoModel, AutoTokenizer
 
 from src.candidate_generation.candidate_generator import get_boundaries, get_mention_input, init_model, \
     prepare_bi_encoder_input, get_candidates
-T
 
 class CrossEntropyLoss(torch.nn.Module):
     def __init__(self, reduction='mean', split_positive_negative=False):
